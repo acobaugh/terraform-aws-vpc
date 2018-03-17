@@ -12,12 +12,12 @@ locals {
 resource "aws_vpc" "this" {
   count = "${var.create_vpc ? 1 : 0}"
 
-  cidr_block           = "${var.cidr}"
-  instance_tenancy     = "${var.instance_tenancy}"
-  enable_dns_hostnames = "${var.enable_dns_hostnames}"
-  enable_dns_support   = "${var.enable_dns_support}"
-
-  tags = "${merge(var.tags, var.vpc_tags, map("Name", format("%s", var.name)))}"
+  cidr_block                       = "${var.cidr}"
+  instance_tenancy                 = "${var.instance_tenancy}"
+  enable_dns_hostnames             = "${var.enable_dns_hostnames}"
+  enable_dns_support               = "${var.enable_dns_support}"
+  assign_generated_ipv6_cidr_block = true
+  tags                             = "${merge(var.tags, var.vpc_tags, map("Name", format("%s", var.name)))}"
 }
 
 ###################
@@ -99,10 +99,12 @@ resource "aws_route_table" "private" {
 resource "aws_subnet" "public" {
   count = "${var.create_vpc && length(var.public_subnets) > 0 ? length(var.public_subnets) : 0}"
 
-  vpc_id                  = "${aws_vpc.this.id}"
-  cidr_block              = "${var.public_subnets[count.index]}"
-  availability_zone       = "${element(var.azs, count.index)}"
-  map_public_ip_on_launch = "${var.map_public_ip_on_launch}"
+  vpc_id                          = "${aws_vpc.this.id}"
+  cidr_block                      = "${var.public_subnets[count.index]}"
+  ipv6_cidr_block                 = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block,8,count.index)}"
+  availability_zone               = "${element(var.azs, count.index)}"
+  map_public_ip_on_launch         = "${var.map_public_ip_on_launch}"
+  assign_ipv6_address_on_creation = true
 
   tags = "${merge(var.tags, var.public_subnet_tags, map("Name", format("%s-public-%s", var.name, element(var.azs, count.index))))}"
 }
@@ -115,6 +117,7 @@ resource "aws_subnet" "private" {
 
   vpc_id            = "${aws_vpc.this.id}"
   cidr_block        = "${var.private_subnets[count.index]}"
+  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block,8,length(var.private_subnets) + count.index)}"
   availability_zone = "${element(var.azs, count.index)}"
 
   tags = "${merge(var.tags, var.private_subnet_tags, map("Name", format("%s-private-%s", var.name, element(var.azs, count.index))))}"
@@ -227,6 +230,20 @@ resource "aws_route" "private_nat_gateway" {
   route_table_id         = "${element(aws_route_table.private.*.id, count.index)}"
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = "${element(aws_nat_gateway.this.*.id, count.index)}"
+}
+
+##
+## IPv6 Egress-only gateway conditional on nat gateway
+resource "aws_egress_only_internet_gateway" "this" {
+  count  = "${var.create_vpc && var.enable_nat_gateway ? 1 : 0}"
+  vpc_id = "${aws_vpc.this.id}"
+}
+
+resource "aws_route" "private_v6_gateway" {
+  count                       = "${var.create_vpc && var.enable_nat_gateway ? 1 : 0}"
+  route_table_id              = "${element(aws_route_table.private.*.id, count.index)}"
+  destination_ipv6_cidr_block = "::/0"
+  egress_only_gateway_id      = "${aws_egress_only_internet_gateway.this.id}"
 }
 
 ######################

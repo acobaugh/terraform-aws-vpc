@@ -9,6 +9,11 @@ output "vpc_cidr_block" {
   value       = "${element(concat(aws_vpc.this.*.cidr_block, list("")), 0)}"
 }
 
+output "vpc_ipv6_cidr_block" {
+  description = "The IPv6 CIDR block of the VPC"
+  value       = "${element(concat(aws_vpc.this.*.ipv6_cidr_block, list("")), 0)}"
+}
+
 output "default_security_group_id" {
   description = "The ID of the security group created by default on VPC creation"
   value       = "${element(concat(aws_vpc.this.*.default_security_group_id, list("")), 0)}"
@@ -70,6 +75,11 @@ output "private_subnets_cidr_blocks" {
   value       = ["${aws_subnet.private.*.cidr_block}"]
 }
 
+output "private_subnets_ipv6_cidr_blocks" {
+  description = "List of ipv6_cidr_blocks of private subnets"
+  value       = ["${aws_subnet.private.*.ipv6_cidr_block}"]
+}
+
 output "public_subnets" {
   description = "List of IDs of public subnets"
   value       = ["${aws_subnet.public.*.id}"]
@@ -77,6 +87,11 @@ output "public_subnets" {
 
 output "public_subnets_cidr_blocks" {
   description = "List of cidr_blocks of public subnets"
+  value       = ["${aws_subnet.public.*.cidr_block}"]
+}
+
+output "public_subnets_ipv6_cidr_blocks" {
+  description = "List of ipv6_cidr_blocks of public subnets"
   value       = ["${aws_subnet.public.*.cidr_block}"]
 }
 
@@ -160,6 +175,11 @@ output "natgw_ids" {
 output "igw_id" {
   description = "The ID of the Internet Gateway"
   value       = "${element(concat(aws_internet_gateway.this.*.id, list("")), 0)}"
+}
+
+output "egress_only_igw_id" {
+  description = "The ID of the IPv6 Egress-only Internet Gateway"
+  value       = "${element(concat(aws_egress_only_internet_gateway.this.*.id, list("")), 0)}"
 }
 
 # VPC Endpoints
