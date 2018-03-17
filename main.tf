@@ -75,6 +75,14 @@ resource "aws_route" "public_internet_gateway" {
   gateway_id             = "${aws_internet_gateway.this.id}"
 }
 
+resource "aws_route" "public_internet_gateway_v6" {
+  count = "${var.create_vpc && length(var.public_subnets) > 0 ? 1 : 0}"
+
+  route_table_id              = "${aws_route_table.public.id}"
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id                  = "${aws_internet_gateway.this.id}"
+}
+
 #################
 # Private routes
 # There are so many routing tables as the largest amount of subnets of each type (really?)
@@ -240,13 +248,14 @@ resource "aws_route" "private_nat_gateway" {
 
 ##
 ## IPv6 Egress-only gateway conditional on nat gateway
+##
 resource "aws_egress_only_internet_gateway" "this" {
   count  = "${var.create_vpc && var.enable_nat_gateway ? 1 : 0}"
   vpc_id = "${aws_vpc.this.id}"
 }
 
 resource "aws_route" "private_v6_gateway" {
-  count                       = "${var.create_vpc && var.enable_nat_gateway ? 1 : 0}"
+  count                       = "${var.create_vpc && var.enable_nat_gateway ? length(var.private_subnets) : 0}"
   route_table_id              = "${element(aws_route_table.private.*.id, count.index)}"
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = "${aws_egress_only_internet_gateway.this.id}"
