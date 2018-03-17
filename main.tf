@@ -112,12 +112,18 @@ resource "aws_subnet" "public" {
 #################
 # Private subnet
 #################
+locals {
+  private_v6_57 = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block, 1, 1)}"
+}
+
 resource "aws_subnet" "private" {
   count = "${var.create_vpc && length(var.private_subnets) > 0 ? length(var.private_subnets) : 0}"
 
-  vpc_id            = "${aws_vpc.this.id}"
-  cidr_block        = "${var.private_subnets[count.index]}"
-  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block,8,length(var.private_subnets) + count.index)}"
+  vpc_id     = "${aws_vpc.this.id}"
+  cidr_block = "${var.private_subnets[count.index]}"
+
+  # assign a /64 that starts at the end of the upper /57 of the parent /56
+  ipv6_cidr_block   = "${cidrsubnet(local.private_v6_57, 7, count.index)}"
   availability_zone = "${element(var.azs, count.index)}"
 
   tags = "${merge(var.tags, var.private_subnet_tags, map("Name", format("%s-private-%s", var.name, element(var.azs, count.index))))}"
