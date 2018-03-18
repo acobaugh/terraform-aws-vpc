@@ -28,6 +28,11 @@ variable "private_subnets" {
   default     = []
 }
 
+variable "private_ipv6_offset" {
+  description = "Number of /64 subnets to leave between the last public subnet and the first private subnet"
+  default     = 0
+}
+
 variable "database_subnets" {
   type        = "list"
   description = "A list of database subnets"
