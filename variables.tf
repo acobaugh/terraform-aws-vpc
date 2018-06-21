@@ -51,6 +51,12 @@ variable "elasticache_subnets" {
   default     = []
 }
 
+variable "intra_subnets" {
+  type        = "list"
+  description = "A list of intra subnets"
+  default     = []
+}
+
 variable "create_database_subnet_group" {
   description = "Controls if database subnet group should be created"
   default     = true
@@ -78,6 +84,11 @@ variable "enable_nat_gateway" {
 
 variable "single_nat_gateway" {
   description = "Should be true if you want to provision a single shared NAT Gateway across all of your private networks"
+  default     = false
+}
+
+variable "one_nat_gateway_per_az" {
+  description = "Should be true if you want only one NAT Gateway per availability zone. Requires `var.azs` to be set, and the number of `public_subnets` created to be greater than or equal to the number of availability zones specified in `var.azs`."
   default     = false
 }
 
@@ -137,6 +148,11 @@ variable "vpc_tags" {
   default     = {}
 }
 
+variable "igw_tags" {
+  description = "Additional tags for the internet gateway"
+  default     = {}
+}
+
 variable "public_subnet_tags" {
   description = "Additional tags for the public subnets"
   default     = {}
@@ -162,8 +178,18 @@ variable "private_route_table_tags" {
   default     = {}
 }
 
+variable "intra_route_table_tags" {
+  description = "Additional tags for the intra route tables"
+  default     = {}
+}
+
 variable "database_subnet_tags" {
   description = "Additional tags for the database subnets"
+  default     = {}
+}
+
+variable "database_subnet_group_tags" {
+  description = "Additional tags for the database subnet group"
   default     = {}
 }
 
@@ -172,13 +198,38 @@ variable "redshift_subnet_tags" {
   default     = {}
 }
 
+variable "redshift_subnet_group_tags" {
+  description = "Additional tags for the redshift subnet group"
+  default     = {}
+}
+
 variable "elasticache_subnet_tags" {
   description = "Additional tags for the elasticache subnets"
   default     = {}
 }
 
+variable "intra_subnet_tags" {
+  description = "Additional tags for the intra subnets"
+  default     = {}
+}
+
 variable "dhcp_options_tags" {
   description = "Additional tags for the DHCP option set"
+  default     = {}
+}
+
+variable "nat_gateway_tags" {
+  description = "Additional tags for the NAT gateways"
+  default     = {}
+}
+
+variable "nat_eip_tags" {
+  description = "Additional tags for the NAT EIP"
+  default     = {}
+}
+
+variable "vpn_gateway_tags" {
+  description = "Additional tags for the VPN gateway"
   default     = {}
 }
 
